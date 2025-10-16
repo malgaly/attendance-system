@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="نظام إدارة حضور الموظفين وحساب الرواتب">
+    <title>نظام إدارة حضور الموظفين والرواتب</title>
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoi2YbYuNin2YUg2KXYr9in2LHYqSDYrdmC2YjYsSDYp9mE2YXZiNi42YHZitmGIiwic2hvcnRfbmFtZSI6Itin2YTZhdmI2LjZgdmK2YYiLCJzdGFydF91cmwiOiIvIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2ZmZmZmZiIsInRoZW1lX2NvbG9yIjoiIzRGNDZFNSJ9">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #EFF6FF 0%, #E0E7FF 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #312E81;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1F2937;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            color: #4F46E5;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 16px;
+            border: 2px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #4F46E5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .btn-primary { background: #4F46E5; color: white; }
+        .btn-primary:hover { background: #4338CA; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(79, 70, 229, 0.3); }
+        .btn-success { background: #059669; color: white; }
+        .btn-success:hover { background: #047857; }
+        .btn-info { background: #2563EB; color: white; }
+        .btn-info:hover { background: #1D4ED8; }
+        .btn-danger { background: #DC2626; color: white; padding: 8px 12px; }
+        .btn-danger:hover { background: #B91C1C; }
+        .btn-archive { background: #9CA3AF; color: white; padding: 5px 10px; font-size: 0.8rem; }
+        .btn-archive:hover { background: #6B7280; }
+        .btn-advances { background-color: #EAB308; color: white; }
+        .btn-advances:hover { background-color: #D97706; }
+        
+        .attendance-row { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #F9FAFB; border-radius: 8px; margin-bottom: 12px; }
+        .attendance-buttons { display: flex; gap: 10px; }
+        .attendance-btn { width: 50px; height: 50px; border: none; border-radius: 8px; font-size: 1.5rem; font-weight: bold; cursor: pointer; transition: all 0.3s; background: #E5E7EB; color: #6B7280; }
+        .attendance-btn:hover { transform: scale(1.1); }
+        .attendance-btn.active-full { background: #059669; color: white; }
+        .attendance-btn.active-half { background: #F59E0B; color: white; }
+        .attendance-btn.active-absent { background: #DC2626; color: white; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        thead { background: #4F46E5; color: white; }
+        th, td { padding: 15px; text-align: center; }
+        th { font-weight: 600; }
+        tbody tr { border-bottom: 1px solid #E5E7EB; transition: background 0.2s; }
+        tbody tr:hover { background: #F9FAFB; }
+        tfoot { background: #F3F4F6; font-weight: bold; }
+
+        .empty-state { text-align: center; padding: 40px; color: #9CA3AF; font-size: 1.1rem; }
+        .employee-name { font-weight: 600; color: #1F2937; }
+        .salary-amount { color: #059669; font-weight: bold; }
+        .days-count { color: #4F46E5; font-weight: 600; }
+        .hidden { display: none; }
+
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); overflow-y: auto; }
+        .modal.show { display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background-color: white; border-radius: 12px; width: 100%; max-width: 900px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .modal-header { background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); color: white; padding: 25px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { margin: 0; font-size: 1.8rem; }
+        .close-btn { background: rgba(255,255,255,0.2); border: none; color: white; font-size: 2rem; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; }
+        .close-btn:hover { background: rgba(255,255,255,0.3); transform: rotate(90deg); }
+        .modal-body { padding: 25px; }
+        
+        #advancesModal .modal-content { max-width: 1000px; }
+        #advancesModal .card { box-shadow: none; border: 1px solid #e5e7eb; }
+        
+        .attendance-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .attendance-table thead { background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); color: white; }
+        .attendance-table th { padding: 15px; text-align: center; font-weight: 600; font-size: 1.1rem; }
+        .attendance-table td { padding: 12px; text-align: center; border-bottom: 1px solid #E5E7EB; }
+        .day-cell { font-weight: bold; font-size: 1.1rem; color: #1F2937; }
+        .status-cell { font-size: 1.5rem; }
+        .row-weekend-highlight { background: #DBEAFE !important; }
+        .row-full { background: #D1FAE5 !important; }
+        .row-half { background: #FEF3C7 !important; }
+        .row-absent { background: #FDDEDE !important; }
+        .employee-summary { background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); padding: 25px; border-radius: 12px; margin-bottom: 25px; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .summary-item { text-align: center; padding: 15px; background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .summary-label { font-size: 0.9rem; color: #6B7280; margin-bottom: 8px; font-weight: 600; }
+        .summary-value { font-size: 1.8rem; font-weight: bold; color: #1F2937; }
+        .btn-view { background: #8B5CF6; color: white; padding: 8px 16px; font-size: 0.9rem; }
+        .btn-view:hover { background: #7C3AED; }
+        
+        .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: fit-content; }
+        .matrix-table th, .matrix-table td { padding: 10px 8px; text-align: center; border: 1px solid #E5E7EB; vertical-align: middle; }
+        .matrix-table thead th { background-color: #4F46E5; color: white; position: sticky; top: 0; z-index: 10; white-space: nowrap; }
+        .matrix-table .day-col { position: sticky; left: 0; background: white; font-weight: bold; text-align: center; min-width: 100px; z-index: 11; border-left: 2px solid #4F46E5; }
+        .status-full { background-color: #D1FAE5; } 
+        .status-half { background-color: #FEF3C7; } 
+        .status-absent { background-color: #FEE2E2; color: #991B1B; } 
+        .status-weekend { background-color: #DBEAFE; color: #1E40AF; } 
+        .matrix-table tfoot td { background-color: #E0E7FF !important; font-weight: bold; border-top: 3px solid #4F46E5; }
+        
+        .month-controls { background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .month-info { text-align: center; font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; }
+        .month-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .btn-month { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); }
+        .btn-month:hover { background: rgba(255,255,255,0.3); }
+
+        .employee-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 15px; }
+        .employee-item { background: #F9FAFB; padding: 15px; border-radius: 8px; border: 2px solid #E5E7EB; }
+        .employee-item.active { border-color: #059669; background: #F0FDF4; }
+        .inactive-employee-management { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #E5E7EB; }
+        .inactive-employees-list-container { border: 1px solid #E5E7EB; border-radius: 8px; max-height: 250px; overflow-y: auto; margin-bottom: 15px; padding: 0 15px; }
+        
+        @media print {
+            body > .container, .modal { display: none !important; }
+            #printableArea.show { display: block; position: static; width: auto; height: auto; background-color: white; overflow: visible; padding: 0; }
+            #printableArea .modal-content { max-width: 100%; box-shadow: none; border-radius: 0; }
+            #printableArea .modal-header { display: none; }
+            #printableArea .modal-body { padding: 0; }
+            #printableArea [style*="overflow"] { overflow: visible !important; }
+            .matrix-table { min-width: 100%; }
+            .matrix-table thead th, .matrix-table .day-col { position: static !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 نظام إدارة حضور الموظفين والرواتب</h1>
+
+        <div class="month-controls">
+            <div class="month-info" id="currentMonthInfo"></div>
+            <div class="month-actions">
+                <button class="btn-month" onclick="switchToPreviousMonth()">📅 الشهر السابق</button>
+                <button class="btn-month" onclick="switchToCurrentMonth()">📅 الشهر الحالي</button>
+                <button class="btn-month" onclick="switchToNextMonth()">📅 الشهر التالي</button>
+                <button class="btn-month" onclick="copyMonthData()">📋 نسخ بيانات الشهر الحالي</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">
+                ⚙️ الإعدادات والعمليات
+            </div>
+            <div class="input-group">
+                <button class="btn-success" onclick="exportData()">📥 تصدير البيانات</button>
+                <label class="btn-info" style="cursor: pointer;">
+                    📤 استيراد البيانات
+                    <input type="file" id="importFile" accept=".json" onchange="importData(event)" class="hidden">
+                </label>
+                <button class="btn-advances" onclick="openAdvancesModal()">💰 إدارة السلف</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">👤 إدارة الموظفين</div>
+            <div class="input-group">
+                <input type="text" id="employeeName" placeholder="اسم الموظف">
+                <input type="number" id="employeeSalary" placeholder="الراتب اليومي" min="0" step="0.01">
+                <button class="btn-primary" onclick="addEmployee()">➕ إضافة موظف</button>
+            </div>
+            <div style="margin-top: 20px; border-top: 1px solid #E5E7EB; padding-top: 15px;">
+                <h3 style="margin-bottom: 15px;">📋 قائمة الموظفين النشطين في الشهر الحالي</h3>
+                <div id="currentMonthEmployeesList" class="employee-list"></div>
+            </div>
+            <div style="margin-top: 20px; border-top: 1px solid #E5E7EB; padding-top: 15px;">
+                <h3 style="margin-bottom: 15px;">👤 إدارة الموظفين غير النشطين / المحذوفين</h3>
+                <div class="input-group">
+                    <select id="inactiveEmployeesSelect" style="flex: 2;">
+                        <option value="">اختر موظف لإضافته للشهر الحالي</option>
+                    </select>
+                    <button class="btn-success" onclick="activateSelectedEmployee()" style="flex: 1;">✅ إضافة للشهر الحالي</button>
+                </div>
+                <h4 style="margin: 15px 0 10px;">🧹 قائمة الموظفين غير النشطين (للحذف النهائي)</h4>
+                <div id="inactiveEmployeesListContainer" class="inactive-employees-list-container"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📅 تسجيل الحضور اليومي</div>
+            <div class="input-group">
+                <div style="flex: 1;">
+                    <label style="font-weight: 600; display: block; margin-bottom: 5px;">اختر التاريخ:</label>
+                    <input type="date" id="attendanceDate" onchange="updateDayName(); renderAttendanceList();" style="width: 100%;">
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-weight: 600; display: block; margin-bottom: 5px;">اليوم:</label>
+                    <input type="text" id="dayName" readonly style="background: #F3F4F6; cursor: default; font-weight: bold;">
+                </div>
+            </div>
+            <div id="attendanceList"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">💰 التقرير الشهري</div>
+            <div class="input-group">
+                <select id="reportMonth" onchange="switchMonth()">
+                    <option value="0">يناير</option><option value="1">فبراير</option><option value="2">مارس</option>
+                    <option value="3">إبريل</option><option value="4">مايو</option><option value="5">يونيو</option>
+                    <option value="6">يوليو</option><option value="7">أغسطس</option><option value="8">سبتمبر</option>
+                    <option value="9">أكتوبر</option><option value="10">نوفمبر</option><option value="11">ديسمبر</option>
+                </select>
+                <input type="number" id="reportYear" min="2020" max="2100" onchange="switchMonth()">
+                <button class="btn-primary" onclick="updateReport()">🔄 تحديث التقرير</button>
+                <button class="btn-info" onclick="showMatrixReport()">عرض جدول الحضور الشامل</button>
+            </div>
+            <div id="reportTable"></div>
+        </div>
+    </div>
+
+    <div id="employeeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalEmployeeName"></h2>
+                <button class="close-btn" onclick="closeModal('employeeModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="employee-summary" id="employeeSummary"></div>
+                <h3 style="margin-bottom: 15px;">📅 سجل الحضور الشهري</h3>
+                <div id="calendarDays"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="advancesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>💰 إدارة السلف (<span id="advancesModalMonthInfo"></span>)</h2>
+                <button class="close-btn" onclick="closeModal('advancesModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="card-title">➕ تسجيل سلفة جديدة</div>
+                    <div class="input-group">
+                        <select id="advanceEmployeeId" style="flex: 2;"><option value="">اختر الموظف</option></select>
+                        <input type="date" id="advanceDate" style="flex: 1;">
+                        <input type="number" id="advanceAmount" placeholder="قيمة السلفة" min="0" step="0.01" style="flex: 1;">
+                        <button class="btn-info" onclick="addAdvance()">➕ تسجيل</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">❌ مسح السلف</div>
+                    <div class="input-group" style="border-bottom: 1px solid #E5E7EB; padding-bottom: 15px;">
+                        <select id="clearSingleAdvanceEmployeeId" style="flex: 2;"><option value="">اختر الموظف</option></select>
+                        <input type="date" id="clearSingleAdvanceDate" style="flex: 1;">
+                        <button class="btn-danger" onclick="clearSingleAdvanceByDate()" style="flex: 1;">❌ مسح السلفة في هذا التاريخ</button>
+                    </div>
+                    <div class="input-group" style="margin-top: 15px;">
+                        <select id="clearAdvanceEmployeeId" style="flex: 2;"><option value="">اختر الموظف</option></select>
+                        <button class="btn-danger" onclick="clearAllAdvancesForEmployee()" style="flex: 1;">🧹 مسح جميع السلف للموظف</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">📊 تقرير السلف</div>
+                    <button class="btn-primary" onclick="showAdvancesMatrixReport()">عرض جدول السلف الشامل للشهر الحالي</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="printableArea" class="modal">
+        <div class="modal-content" style="max-width: 95vw;">
+            <div class="modal-header">
+                <h2 id="printableAreaTitle"></h2>
+                <div>
+                    <button class="btn-success" onclick="window.print()">🖨️ طباعة</button>
+                    <button class="close-btn" onclick="closeModal('printableArea')">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div id="printableContent" style="overflow-x: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let employees = [];
+        let monthlyData = {};
+        let currentMonthKey = '';
+
+        window.onload = function() {
+            setTodayDate();
+            loadData();
+            setCurrentMonthYear();
+            initializeCurrentMonth();
+            updateAllUI();
+        };
+        
+        function updateAllUI() {
+            updateMonthInfo();
+            renderCurrentMonthEmployeesList();
+            renderInactiveEmployeesLists();
+            renderAttendanceList();
+            renderEmployeeSelects();
+            updateReport();
+        }
+
+        function setTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('attendanceDate').value = today;
+            document.getElementById('advanceDate').value = today;
+            document.getElementById('clearSingleAdvanceDate').value = today;
+            updateDayName();
+        }
+
+        function updateDayName() {
+            const dateInput = document.getElementById('attendanceDate').value;
+            if (dateInput) {
+                const date = new Date(dateInput + 'T00:00:00');
+                const dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+                const dayOfWeek = date.getDay();
+                const dayNameInput = document.getElementById('dayName');
+                dayNameInput.value = dayNames[dayOfWeek];
+                if (dayOfWeek === 5 || dayOfWeek === 6) { // Friday or Saturday
+                    dayNameInput.style.background = '#FEE2E2';
+                    dayNameInput.style.color = '#DC2626';
+                } else {
+                    dayNameInput.style.background = '#F3F4F6';
+                    dayNameInput.style.color = '#1F2937';
+                }
+            }
+        }
+
+        function setCurrentMonthYear() {
+            const now = new Date();
+            document.getElementById('reportMonth').value = now.getMonth();
+            document.getElementById('reportYear').value = now.getFullYear();
+        }
+
+        function getCurrentMonthKey() {
+            const reportMonth = parseInt(document.getElementById('reportMonth').value);
+            const reportYear = parseInt(document.getElementById('reportYear').value);
+            return `${reportYear}-${String(reportMonth + 1).padStart(2, '0')}`;
+        }
+
+        function initializeCurrentMonth() {
+            currentMonthKey = getCurrentMonthKey();
+            if (!monthlyData[currentMonthKey]) {
+                monthlyData[currentMonthKey] = { employees: [], attendance: {}, advances: [] };
+                const activeEmployees = employees.filter(emp => !emp.isDeleted);
+                activeEmployees.forEach(emp => {
+                    if (!emp.removedMonths || !emp.removedMonths.includes(currentMonthKey)) {
+                        monthlyData[currentMonthKey].employees.push(JSON.parse(JSON.stringify(emp)));
+                    }
+                });
+                saveData();
+            }
+        }
+
+        function updateMonthInfo() {
+            const reportMonth = parseInt(document.getElementById('reportMonth').value);
+            const reportYear = parseInt(document.getElementById('reportYear').value);
+            const monthNames = ['يناير', 'فبراير', 'مارس', 'إبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+            const monthText = `${monthNames[reportMonth]} ${reportYear}`;
+            document.getElementById('currentMonthInfo').textContent = `الشهر الحالي: ${monthText}`;
+            document.getElementById('advancesModalMonthInfo').textContent = monthText;
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('employeeData');
+            if (saved) {
+                employees = JSON.parse(saved);
+                employees.forEach(emp => {
+                    emp.isDeleted = emp.isDeleted || false;
+                    emp.removedMonths = emp.removedMonths || [];
+                });
+            }
+            monthlyData = JSON.parse(localStorage.getItem('monthlyEmployeeData') || '{}');
+        }
+
+        function saveData() {
+            localStorage.setItem('employeeData', JSON.stringify(employees));
+            localStorage.setItem('monthlyEmployeeData', JSON.stringify(monthlyData));
+        }
+
+        function switchMonth() {
+            currentMonthKey = getCurrentMonthKey();
+            initializeCurrentMonth();
+            updateAllUI();
+        }
+
+        function switchToPreviousMonth() {
+            let month = parseInt(document.getElementById('reportMonth').value);
+            let year = parseInt(document.getElementById('reportYear').value);
+            if (--month < 0) { month = 11; year--; }
+            document.getElementById('reportMonth').value = month;
+            document.getElementById('reportYear').value = year;
+            switchMonth();
+        }
+
+        function switchToNextMonth() {
+            let month = parseInt(document.getElementById('reportMonth').value);
+            let year = parseInt(document.getElementById('reportYear').value);
+            if (++month > 11) { month = 0; year++; }
+            document.getElementById('reportMonth').value = month;
+            document.getElementById('reportYear').value = year;
+            switchMonth();
+        }
+
+        function switchToCurrentMonth() {
+            const now = new Date();
+            document.getElementById('reportMonth').value = now.getMonth();
+            document.getElementById('reportYear').value = now.getFullYear();
+            switchMonth();
+        }
+        
+        function copyMonthData() {
+            const sourceMonthKey = currentMonthKey;
+            const targetMonthKey = prompt('أدخل الشهر المستهدف (بصيغة YYYY-MM):', sourceMonthKey);
+            if (targetMonthKey && monthlyData[sourceMonthKey]) {
+                if (confirm(`هل تريد نسخ بيانات ${sourceMonthKey} إلى ${targetMonthKey}؟`)) {
+                    monthlyData[targetMonthKey] = JSON.parse(JSON.stringify(monthlyData[sourceMonthKey]));
+                    saveData();
+                    alert('تم نسخ البيانات بنجاح!');
+                }
+            }
+        }
+        
+        // Employee Management
+        function addEmployee() {
+            const name = document.getElementById('employeeName').value.trim();
+            const salary = parseFloat(document.getElementById('employeeSalary').value);
+            if (!name || isNaN(salary) || salary <= 0) {
+                alert('الرجاء إدخال اسم صحيح وراتب يومي!');
+                return;
+            }
+            if (employees.find(e => e.name.toLowerCase() === name.toLowerCase() && !e.isDeleted)) {
+                alert('يوجد موظف بنفس الاسم مسجل مسبقاً!');
+                return;
+            }
+            const employee = { id: Date.now(), name, dailySalary: salary, removedMonths: [], isDeleted: false };
+            employees.push(employee);
+            
+            const [startYear, startMonth] = currentMonthKey.split('-').map(Number);
+            for (let y = startYear; y < startYear + 5; y++) {
+                for (let m = (y === startYear ? startMonth : 1); m <= 12; m++) {
+                    const monthKey = `${y}-${String(m).padStart(2, '0')}`;
+                    if (!monthlyData[monthKey]) {
+                        monthlyData[monthKey] = { employees: [], attendance: {}, advances: [] };
+                    }
+                    if (!monthlyData[monthKey].employees.some(e => e.id === employee.id)) {
+                        monthlyData[monthKey].employees.push(JSON.parse(JSON.stringify(employee)));
+                    }
+                }
+            }
+            saveData();
+            document.getElementById('employeeName').value = '';
+            document.getElementById('employeeSalary').value = '';
+            updateAllUI();
+            alert(`تم إضافة الموظف ${name} بنجاح!`);
+        }
+
+        function deactivateEmployee(employeeId) {
+            const employee = employees.find(emp => emp.id === employeeId);
+            if (!employee) return;
+            if (confirm(`هل تريد إزالة ${employee.name} من الشهر الحالي (${currentMonthKey}) وجميع الأشهر التالية؟`)) {
+                const [startYear, startMonth] = currentMonthKey.split('-').map(Number);
+                for (let y = startYear; y < startYear + 5; y++) {
+                    for (let m = (y === startYear ? startMonth : 1); m <= 12; m++) {
+                        const monthKey = `${y}-${String(m).padStart(2, '0')}`;
+                        if (monthlyData[monthKey] && monthlyData[monthKey].employees) {
+                            monthlyData[monthKey].employees = monthlyData[monthKey].employees.filter(e => e.id !== employeeId);
+                        }
+                    }
+                }
+                saveData();
+                updateAllUI();
+                alert(`تم إزالة الموظف ${employee.name} من هذا الشهر والأشهر المستقبلية.`);
+            }
+        }
+        
+        function activateSelectedEmployee() {
+            const employeeId = parseInt(document.getElementById('inactiveEmployeesSelect').value);
+            if (!employeeId) return;
+            const employee = employees.find(emp => emp.id === employeeId);
+            if (monthlyData[currentMonthKey] && !monthlyData[currentMonthKey].employees.some(e => e.id === employeeId)) {
+                monthlyData[currentMonthKey].employees.push(JSON.parse(JSON.stringify(employee)));
+                saveData();
+                updateAllUI();
+                alert(`تمت إعادة الموظف ${employee.name} للشهر الحالي`);
+            }
+        }
+
+        function permanentlyDeleteEmployee(employeeId) {
+            const employee = employees.find(emp => emp.id === employeeId);
+            if (!employee) return;
+            if (confirm(`تحذير: هل أنت متأكد من الحذف النهائي للموظف ${employee.name}؟`)) {
+                employee.isDeleted = true;
+                deactivateEmployee(employeeId); // Also removes them from current and future months
+                saveData();
+                updateAllUI();
+            }
+        }
+
+        // Attendance
+        function updateAttendance(id, status) {
+            const dateInput = document.getElementById('attendanceDate').value;
+            if (!dateInput) return;
+            if (!monthlyData[currentMonthKey].attendance[id]) {
+                monthlyData[currentMonthKey].attendance[id] = {};
+            }
+            monthlyData[currentMonthKey].attendance[id][dateInput] = status;
+            saveData();
+            renderAttendanceList();
+            updateReport();
+        }
+
+        // Advances (now part of main script)
+        function addAdvance() {
+            const employeeId = parseInt(document.getElementById('advanceEmployeeId').value);
+            const date = document.getElementById('advanceDate').value;
+            const amount = parseFloat(document.getElementById('advanceAmount').value);
+
+            if (!employeeId || !date || isNaN(amount) || amount <= 0) {
+                alert('الرجاء اختيار الموظف، وتاريخ، وقيمة صحيحة للسلفة.');
+                return;
+            }
+            if (!monthlyData[currentMonthKey].advances) {
+                monthlyData[currentMonthKey].advances = [];
+            }
+            if (monthlyData[currentMonthKey].advances.some(adv => adv.employeeId === employeeId && adv.date === date)) {
+                alert(`يوجد سلفة سابقة مسجلة لهذا الموظف في تاريخ ${date}.`);
+                return;
+            }
+            monthlyData[currentMonthKey].advances.push({ id: Date.now(), employeeId, date, amount });
+            saveData();
+            updateReport();
+            document.getElementById('advanceAmount').value = '';
+            alert('تم تسجيل السلفة بنجاح.');
+        }
+
+        function clearSingleAdvanceByDate() {
+            const employeeId = parseInt(document.getElementById('clearSingleAdvanceEmployeeId').value);
+            const date = document.getElementById('clearSingleAdvanceDate').value;
+            if (!employeeId || !date) { alert('الرجاء اختيار الموظف وتحديد التاريخ.'); return; }
+            const advanceIndex = monthlyData[currentMonthKey].advances.findIndex(adv => adv.employeeId === employeeId && adv.date === date);
+            if (advanceIndex === -1) { alert(`لا توجد سلفة مسجلة لهذا الموظف في تاريخ ${date}.`); return; }
+            if (confirm(`هل أنت متأكد من مسح السلفة في تاريخ ${date}؟`)) {
+                monthlyData[currentMonthKey].advances.splice(advanceIndex, 1);
+                saveData();
+                updateReport();
+                alert(`تم مسح السلفة بنجاح.`);
+            }
+        }
+
+        function clearAllAdvancesForEmployee() {
+            const employeeId = parseInt(document.getElementById('clearAdvanceEmployeeId').value);
+            if (!employeeId) return;
+            const employee = getCurrentMonthEmployees().find(emp => emp.id === employeeId);
+            if (confirm(`هل أنت متأكد من مسح جميع السلف للموظف ${employee.name}؟`)) {
+                monthlyData[currentMonthKey].advances = monthlyData[currentMonthKey].advances.filter(adv => adv.employeeId !== employeeId);
+                saveData();
+                updateReport();
+                alert(`تم مسح جميع السلف للموظف.`);
+            }
+        }
+        
+        // Rendering Functions
+        function renderCurrentMonthEmployeesList() {
+            const container = document.getElementById('currentMonthEmployeesList');
+            container.innerHTML = '';
+            const currentEmployees = getCurrentMonthEmployees();
+            if (currentEmployees.length === 0) {
+                container.innerHTML = '<div class="empty-state">لا يوجد موظفون نشطون</div>';
+                return;
+            }
+            currentEmployees.forEach(emp => {
+                container.innerHTML += `<div class="employee-item active">
+                    <div style="font-weight: bold;">${emp.name}</div>
+                    <div style="font-size: 0.9rem;">الراتب: ${emp.dailySalary.toFixed(2)}</div>
+                    <button class="btn-danger" onclick="deactivateEmployee(${emp.id})" style="width: 100%; margin-top: 10px; padding: 5px; font-size: 0.8rem;">
+                        ❌ إزالة من الشهر الحالي
+                    </button>
+                </div>`;
+            });
+        }
+        
+        function renderInactiveEmployeesLists() {
+            const select = document.getElementById('inactiveEmployeesSelect');
+            const listContainer = document.getElementById('inactiveEmployeesListContainer');
+            select.innerHTML = '<option value="">اختر موظف لإضافته</option>';
+            listContainer.innerHTML = '';
+            const inactive = employees.filter(emp => !emp.isDeleted && !getCurrentMonthEmployees().some(e => e.id === emp.id));
+            if (inactive.length === 0) {
+                listContainer.innerHTML = '<div class="empty-state">لا يوجد موظفون غير نشطين.</div>';
+            }
+            inactive.forEach(emp => {
+                select.innerHTML += `<option value="${emp.id}">${emp.name}</option>`;
+                listContainer.innerHTML += `<div class="inactive-employee-management">
+                    <div>${emp.name}</div>
+                    <button class="btn-archive" onclick="permanentlyDeleteEmployee(${emp.id})">🗑️ حذف نهائي</button>
+                </div>`;
+            });
+        }
+        
+        function renderEmployeeSelects() {
+            const selects = ['advanceEmployeeId', 'clearSingleAdvanceEmployeeId', 'clearAdvanceEmployeeId'];
+            const currentEmployees = getCurrentMonthEmployees();
+            selects.forEach(id => {
+                const select = document.getElementById(id);
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">اختر الموظف</option>';
+                currentEmployees.forEach(emp => {
+                    select.innerHTML += `<option value="${emp.id}">${emp.name}</option>`;
+                });
+                select.value = currentValue;
+            });
+        }
+
+        function renderAttendanceList() {
+            const container = document.getElementById('attendanceList');
+            const date = document.getElementById('attendanceDate').value;
+            container.innerHTML = '';
+            const currentEmployees = getCurrentMonthEmployees();
+            if (!date) { container.innerHTML = '<div class="empty-state">اختر تاريخاً.</div>'; return; }
+            if (currentEmployees.length === 0) { container.innerHTML = '<div class="empty-state">لا يوجد موظفون.</div>'; return; }
+
+            currentEmployees.forEach(emp => {
+                const status = (monthlyData[currentMonthKey].attendance[emp.id] || {})[date] || 0;
+                container.innerHTML += `<div class="attendance-row">
+                    <div class="employee-name">${emp.name}</div>
+                    <div class="attendance-buttons">
+                        <button class="attendance-btn ${status === 1 ? 'active-full' : ''}" onclick="updateAttendance(${emp.id}, 1)">ح</button>
+                        <button class="attendance-btn ${status === 0.5 ? 'active-half' : ''}" onclick="updateAttendance(${emp.id}, 0.5)">ن</button>
+                        <button class="attendance-btn ${status === 0 ? 'active-absent' : ''}" onclick="updateAttendance(${emp.id}, 0)">غ</button>
+                    </div>
+                </div>`;
+            });
+        }
+        
+        // Reports
+        function updateReport() {
+            const reportMonth = parseInt(document.getElementById('reportMonth').value);
+            const reportYear = parseInt(document.getElementById('reportYear').value);
+            const reportTable = document.getElementById('reportTable');
+            const currentEmployees = getCurrentMonthEmployees();
+            if (currentEmployees.length === 0) { reportTable.innerHTML = `<div class="empty-state">لا يوجد موظفون في هذا الشهر.</div>`; return; }
+
+            let totalDays = 0, totalSalary = 0, totalAdvances = 0, totalNetDue = 0;
+            let tableBody = '';
+            const daysInMonth = new Date(reportYear, reportMonth + 1, 0).getDate();
+
+            currentEmployees.forEach(emp => {
+                let fullDays = 0, halfDays = 0;
+                const empAttendance = (monthlyData[currentMonthKey].attendance[emp.id] || {});
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const dateKey = `${reportYear}-${String(reportMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    const status = empAttendance[dateKey] || 0;
+                    if (status === 1) fullDays++;
+                    else if (status === 0.5) halfDays++;
+                }
+
+                const empAdvances = (monthlyData[currentMonthKey].advances || []).filter(adv => adv.employeeId === emp.id);
+                const totalMonthlyAdvance = empAdvances.reduce((sum, adv) => sum + adv.amount, 0);
+                const totalWorkingDays = fullDays + halfDays * 0.5;
+                const netSalary = totalWorkingDays * emp.dailySalary;
+                const netDue = netSalary - totalMonthlyAdvance;
+                
+                totalDays += totalWorkingDays;
+                totalSalary += netSalary;
+                totalAdvances += totalMonthlyAdvance;
+                totalNetDue += netDue;
+
+                tableBody += `<tr>
+                    <td class="employee-name">${emp.name}</td><td>${emp.dailySalary.toFixed(2)}</td>
+                    <td>${fullDays}</td><td>${halfDays}</td><td class="days-count">${totalWorkingDays.toFixed(1)}</td>
+                    <td class="salary-amount">${netSalary.toFixed(2)}</td><td>${totalMonthlyAdvance.toFixed(2)}</td>
+                    <td class="salary-amount" style="color:${netDue < 0 ? '#DC2626' : '#059669'};">${netDue.toFixed(2)}</td>
+                    <td><button class="btn-view" onclick="showEmployeeDetailsModal(${emp.id})">عرض</button></td>
+                </tr>`;
+            });
+
+            reportTable.innerHTML = `<table><thead>
+                <tr><th>الموظف</th><th>راتب اليوم</th><th>أيام كاملة</th><th>أنصاف</th><th>إجمالي الأيام</th><th>الراتب</th><th>السلف</th><th>الصافي</th><th>الإجراء</th></tr>
+            </thead><tbody>${tableBody}</tbody><tfoot>
+                <tr><td colspan="4">الإجمالي</td>
+                    <td class="days-count">${totalDays.toFixed(1)}</td><td class="salary-amount">${totalSalary.toFixed(2)}</td>
+                    <td>${totalAdvances.toFixed(2)}</td><td class="salary-amount" style="color:${totalNetDue < 0 ? '#DC2626' : '#059669'};">${totalNetDue.toFixed(2)}</td>
+                    <td></td>
+                </tr>
+            </tfoot></table>`;
+        }
+        
+        // Modal & Printing
+        function openAdvancesModal() {
+            updateMonthInfo(); // Ensure month name is updated in the modal title
+            document.getElementById('advancesModal').classList.add('show');
+        }
+        
+        function closeModal(modalId) { document.getElementById(modalId).classList.remove('show'); }
+
+        function showEmployeeDetailsModal(id) {
+            const emp = getCurrentMonthEmployees().find(e => e.id === id);
+            if (!emp) return;
+            const [year, month] = currentMonthKey.split('-').map(Number);
+            document.getElementById('modalEmployeeName').textContent = emp.name;
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+            let tableRows = '', totalFull = 0, totalHalf = 0, totalAdvance = 0;
+            const empAttendance = (monthlyData[currentMonthKey].attendance[emp.id] || {});
+            const empAdvances = (monthlyData[currentMonthKey].advances || []).filter(adv => adv.employeeId === emp.id);
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const date = new Date(year, month - 1, d);
+                const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const isWeekend = [5, 6].includes(date.getDay());
+                const status = empAttendance[dateKey] || 0;
+                const advance = empAdvances.find(adv => adv.date === dateKey);
+                
+                let s = { symbol: '❌', class: 'row-absent' };
+                if (isWeekend) s = { symbol: '🏖️', class: 'row-weekend-highlight' };
+                else if (status === 1) { s = { symbol: '✅', class: 'row-full' }; totalFull++; }
+                else if (status === 0.5) { s = { symbol: '⏱️', class: 'row-half' }; totalHalf++; }
+                
+                tableRows += `<tr class="${s.class}"><td>${d}</td><td>${dayNames[date.getDay()]}</td><td class="status-cell">${s.symbol}</td>
+                    <td>${advance ? advance.amount.toFixed(2) : ''}</td></tr>`;
+            }
+            totalAdvance = empAdvances.reduce((sum, adv) => sum + adv.amount, 0);
+            const totalWorkDays = totalFull + (totalHalf * 0.5);
+            const netDue = (totalWorkDays * emp.dailySalary) - totalAdvance;
+
+            document.getElementById('employeeSummary').innerHTML = `
+                <div class="summary-item"><div class="summary-label">أيام العمل</div><div class="summary-value">${totalWorkDays.toFixed(1)}</div></div>
+                <div class="summary-item"><div class="summary-label">السلف</div><div class="summary-value" style="color:#DC2626;">${totalAdvance.toFixed(2)}</div></div>
+                <div class="summary-item"><div class="summary-label">الصافي</div><div class="summary-value" style="color:${netDue < 0 ? '#DC2626' : '#059669'};">${netDue.toFixed(2)}</div></div>`;
+            document.getElementById('calendarDays').innerHTML = `<table class="attendance-table"><thead><tr><th>اليوم</th><th>الأسبوع</th><th>الحالة</th><th>سلفة</th></tr></thead><tbody>${tableRows}</tbody></table>`;
+            document.getElementById('employeeModal').classList.add('show');
+        }
+
+        function showMatrixReport() {
+            const reportMonth = parseInt(document.getElementById('reportMonth').value);
+            const reportYear = parseInt(document.getElementById('reportYear').value);
+            const monthText = `${document.getElementById('reportMonth').options[reportMonth].text} ${reportYear}`;
+            document.getElementById('printableAreaTitle').textContent = `جدول الحضور - ${monthText}`;
+            document.getElementById('printableContent').innerHTML = generateMatrixHTML(false);
+            document.getElementById('printableArea').classList.add('show');
+        }
+
+        function showAdvancesMatrixReport() {
+            const reportMonth = parseInt(document.getElementById('reportMonth').value);
+            const reportYear = parseInt(document.getElementById('reportYear').value);
+            const monthText = `${document.getElementById('reportMonth').options[reportMonth].text} ${reportYear}`;
+            document.getElementById('printableAreaTitle').textContent = `جدول السلف - ${monthText}`;
+            document.getElementById('printableContent').innerHTML = generateMatrixHTML(true);
+            document.getElementById('printableArea').classList.add('show');
+        }
+
+        // *** THIS IS THE MODIFIED FUNCTION ***
+        function generateMatrixHTML(advancesOnly = false) {
+            const currentEmployees = getCurrentMonthEmployees();
+            if (currentEmployees.length === 0) return '<div class="empty-state">لا يوجد موظفون لعرضهم.</div>';
+
+            const [year, month] = currentMonthKey.split('-').map(Number);
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+            // Header
+            let html = `<table class="matrix-table"><thead><tr><th class="day-col">اليوم</th>`;
+            currentEmployees.forEach(emp => {
+                html += `<th>${emp.name}</th>`;
+            });
+            html += `</tr></thead><tbody>`;
+
+            // Body Rows (Days)
+            for (let d = 1; d <= daysInMonth; d++) {
+                const date = new Date(year, month - 1, d);
+                const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const dayOfWeek = date.getDay();
+                const isWeekend = [5, 6].includes(dayOfWeek);
+                
+                html += `<tr class="${isWeekend ? 'status-weekend' : ''}">`;
+                html += `<td class="day-col">${d} - ${dayNames[dayOfWeek]}</td>`;
+
+                currentEmployees.forEach(emp => {
+                    if (advancesOnly) {
+                        const advance = (monthlyData[currentMonthKey].advances || []).find(adv => adv.employeeId === emp.id && adv.date === dateKey);
+                        html += `<td class="${advance ? 'status-absent' : ''}">${advance ? advance.amount.toFixed(2) : '—'}</td>`;
+                    } else {
+                        const status = (monthlyData[currentMonthKey].attendance[emp.id] || {})[dateKey] || 0;
+                        let cellContent = '❌';
+                        let cellClass = 'status-absent';
+                        if (isWeekend) {
+                            cellContent = '🏖️';
+                            cellClass = 'status-weekend';
+                        } else if (status === 1) {
+                            cellContent = '✅';
+                            cellClass = 'status-full';
+                        } else if (status === 0.5) {
+                            cellContent = '⏱️';
+                            cellClass = 'status-half';
+                        }
+                        html += `<td class="${cellClass}">${cellContent}</td>`;
+                    }
+                });
+                html += `</tr>`;
+            }
+            html += `</tbody>`;
+
+            // Footer (Totals)
+            html += `<tfoot>`;
+            if (advancesOnly) {
+                html += `<tr><td class="day-col">إجمالي السلف</td>`;
+                currentEmployees.forEach(emp => {
+                    const totalAdvance = (monthlyData[currentMonthKey].advances || [])
+                        .filter(adv => adv.employeeId === emp.id)
+                        .reduce((sum, adv) => sum + adv.amount, 0);
+                    html += `<td class="status-absent">${totalAdvance.toFixed(2)}</td>`;
+                });
+                html += `</tr>`;
+            } else {
+                // Total Working Days
+                html += `<tr><td class="day-col">إجمالي الأيام</td>`;
+                currentEmployees.forEach(emp => {
+                    let totalWorkingDays = 0;
+                    const empAttendance = (monthlyData[currentMonthKey].attendance[emp.id] || {});
+                     for (let d = 1; d <= daysInMonth; d++) {
+                        const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                        const status = empAttendance[dateKey] || 0;
+                        if (status === 1) totalWorkingDays++;
+                        else if (status === 0.5) totalWorkingDays += 0.5;
+                    }
+                    html += `<td class="days-count">${totalWorkingDays.toFixed(1)}</td>`;
+                });
+                html += `</tr>`;
+                
+                // Total Advances
+                html += `<tr><td class="day-col">إجمالي السلف</td>`;
+                currentEmployees.forEach(emp => {
+                     const totalAdvance = (monthlyData[currentMonthKey].advances || [])
+                        .filter(adv => adv.employeeId === emp.id)
+                        .reduce((sum, adv) => sum + adv.amount, 0);
+                    html += `<td class="status-absent">${totalAdvance.toFixed(2)}</td>`;
+                });
+                html += `</tr>`;
+
+                // Net Salary
+                html += `<tr><td class="day-col">الصافي المستحق</td>`;
+                 currentEmployees.forEach(emp => {
+                    let totalWorkingDays = 0;
+                    const empAttendance = (monthlyData[currentMonthKey].attendance[emp.id] || {});
+                     for (let d = 1; d <= daysInMonth; d++) {
+                        const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                        const status = empAttendance[dateKey] || 0;
+                        if (status === 1) totalWorkingDays++;
+                        else if (status === 0.5) totalWorkingDays += 0.5;
+                    }
+                     const totalAdvance = (monthlyData[currentMonthKey].advances || [])
+                        .filter(adv => adv.employeeId === emp.id)
+                        .reduce((sum, adv) => sum + adv.amount, 0);
+                    const netDue = (totalWorkingDays * emp.dailySalary) - totalAdvance;
+                    html += `<td class="salary-amount" style="color:${netDue < 0 ? '#DC2626' : '#059669'};">${netDue.toFixed(2)}</td>`;
+                });
+                html += `</tr>`;
+            }
+            html += `</tfoot></table>`;
+            return html;
+        }
+
+        // Data Backup
+        function exportData() {
+            const data = { employees, monthlyData };
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+            a.download = `backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+            alert('تم تصدير البيانات بنجاح!');
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (!confirm('سيؤدي هذا إلى الكتابة فوق جميع البيانات الحالية. هل أنت متأكد؟')) {
+                event.target.value = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.employees && data.monthlyData) {
+                        employees = data.employees;
+                        monthlyData = data.monthlyData;
+                        saveData();
+                        location.reload();
+                    } else { alert('ملف غير صالح.'); }
+                } catch (err) { alert('فشل استيراد الملف.'); }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // Helper Functions
+        const getCurrentMonthEmployees = () => (monthlyData[currentMonthKey] || {}).employees || [];
+
+    </script>
+</body>
+</html>
